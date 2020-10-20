@@ -39,7 +39,7 @@ public class AuthorController {
     @Value("${redis.topic}")
     private String redisTopic;
 
-    private final static Logger logger = LoggerFactory.getLogger(AuthorController.class);
+    private static final Logger logger = LoggerFactory.getLogger(AuthorController.class);
     private final AuthorService authorService;
     private final RedisTemplate<String, Object> redisTemplate;
 
