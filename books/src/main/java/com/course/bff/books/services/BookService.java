@@ -13,6 +13,8 @@ import org.asynchttpclient.RequestBuilder;
 import org.asynchttpclient.Response;
 import org.asynchttpclient.util.HttpConstants;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.sleuth.SpanName;
+import org.springframework.cloud.sleuth.annotation.NewSpan;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
@@ -23,6 +25,7 @@ import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 
 @Component
+@SpanName("BookService")
 public class BookService {
     @Value("${authorService}")
     private String authorService;
@@ -33,6 +36,7 @@ public class BookService {
         books = new ArrayList<>();
     }
 
+    @NewSpan("getBooks")
     public Collection<Book> getBooks() {
         return this.books;
     }
