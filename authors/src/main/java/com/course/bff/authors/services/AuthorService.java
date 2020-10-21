@@ -2,6 +2,10 @@ package com.course.bff.authors.services;
 
 import com.course.bff.authors.models.Author;
 import com.course.bff.authors.requests.CreateAuthorCommand;
+
+import org.springframework.cloud.sleuth.SpanName;
+import org.springframework.cloud.sleuth.annotation.NewSpan;
+import org.springframework.cloud.sleuth.annotation.SpanTag;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -9,6 +13,7 @@ import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
 
+@SpanName("AuthorService")
 @Component
 public class AuthorService {
     private final ArrayList<Author> authors;
@@ -36,6 +41,7 @@ public class AuthorService {
                 .withAddres("1-9 Inverness Terrace, Bayswater, London W2 3JP"));
     }
 
+    @NewSpan(name = "getAuthors")
     public Collection<Author> getAuthors() {
         return this.authors;
     }
