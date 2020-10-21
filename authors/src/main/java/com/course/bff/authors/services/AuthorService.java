@@ -13,7 +13,6 @@ import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
 
-@SpanName("AuthorService")
 @Component
 public class AuthorService {
     private final ArrayList<Author> authors;

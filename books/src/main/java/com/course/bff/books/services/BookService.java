@@ -25,7 +25,6 @@ import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 
 @Component
-@SpanName("BookService")
 public class BookService {
     @Value("${authorService}")
     private String authorService;

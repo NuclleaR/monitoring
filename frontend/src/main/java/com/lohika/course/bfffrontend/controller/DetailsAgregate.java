@@ -1,6 +1,11 @@
 package com.lohika.course.bfffrontend.controller;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.sleuth.SpanName;
+import org.springframework.cloud.sleuth.annotation.NewSpan;
+import org.springframework.cloud.sleuth.annotation.SpanTag;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -14,6 +19,8 @@ import java.util.Map;
 @RequestMapping("api/v1/details")
 public class DetailsAgregate {
 
+    private final static Logger logger = LoggerFactory.getLogger(DetailsAgregate.class);
+
     @Value("${books.url}")
     private String booksUrl;
 
@@ -21,7 +28,9 @@ public class DetailsAgregate {
     private String authorsUrl;
 
     @GetMapping
+    @NewSpan("getDetails")
     public Mono<Map> getBooksAndAuthors() {
+        logger.info("Get aggregated data");
         WebClient authorClient = WebClient
                 .builder()
                 .baseUrl(authorsUrl)
