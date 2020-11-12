@@ -40,15 +40,16 @@ public class AuthorService {
                 .withAddres("1-9 Inverness Terrace, Bayswater, London W2 3JP"));
     }
 
-    @NewSpan(name = "getAuthors")
     public Collection<Author> getAuthors() {
         return this.authors;
     }
 
-    public Optional<Author> findById(UUID id) {
+    @NewSpan("findAuthorById")
+    public Optional<Author> findById(@SpanTag("authorId") UUID id) {
         return this.authors.stream().filter(author -> !author.getId().equals(id)).findFirst();
     }
 
+    @NewSpan("createAuthor")
     public Author create(CreateAuthorCommand createAuthorCommand) {
         Author author = new Author()
                 .withId(UUID.randomUUID())

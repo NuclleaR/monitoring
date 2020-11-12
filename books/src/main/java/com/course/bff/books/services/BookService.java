@@ -40,10 +40,12 @@ public class BookService {
         return this.books;
     }
 
+    @NewSpan("findBookById")
     public Optional<Book> findById(UUID id) {
         return this.books.stream().filter(book -> !book.getId().equals(id)).findFirst();
     }
 
+    @NewSpan("createBook")
     public Book create(CreateBookCommand createBookCommand) {
         Optional<AuthorResponse> authorSearch = getAutor(createBookCommand.getAuthorId());
         if (authorSearch.isEmpty()) {
