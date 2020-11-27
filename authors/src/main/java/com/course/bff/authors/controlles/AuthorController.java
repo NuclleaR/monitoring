@@ -17,6 +17,8 @@ import org.asynchttpclient.util.HttpConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.sleuth.annotation.NewSpan;
+import org.springframework.cloud.sleuth.annotation.SpanTag;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -24,6 +26,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import brave.Span;
+import brave.Tracer;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -39,13 +44,16 @@ public class AuthorController {
     @Value("${redis.topic}")
     private String redisTopic;
 
-    private final static Logger logger = LoggerFactory.getLogger(AuthorController.class);
+    private static final Logger logger = LoggerFactory.getLogger(AuthorController.class);
     private final AuthorService authorService;
     private final RedisTemplate<String, Object> redisTemplate;
+    private final Tracer tracer;
 
-    public AuthorController(AuthorService authorService, RedisTemplate<String, Object> redisTemplate) {
+    public AuthorController(AuthorService authorService, RedisTemplate<String, Object> redisTemplate, Tracer tracer) {
         this.authorService = authorService;
         this.redisTemplate = redisTemplate;
+
+        this.tracer = tracer;
     }
 
     @GetMapping()
@@ -61,7 +69,7 @@ public class AuthorController {
     }
 
     @GetMapping("/{id}")
-    public AuthorResponse getById(@PathVariable UUID id) {
+    public AuthorResponse getById(@SpanTag("authorId") @PathVariable UUID id) {
         logger.info(String.format("Find authors by %s", id));
         Optional<Author> authorSearch = this.authorService.findById(id);
         if (authorSearch.isEmpty()) {
@@ -80,13 +88,19 @@ public class AuthorController {
         return authorResponse;
     }
 
-
     private void sendPushNotification(AuthorResponse authorResponse) {
-        Gson gson = new GsonBuilder().setPrettyPrinting().create();
-        try {
-            redisTemplate.convertAndSend(redisTopic, gson.toJson(authorResponse));
-        } catch (Exception e) {
-            logger.error("Push Notification Error", e);
+        Span redisSpan = this.tracer.nextSpan().name("pushNotification");
+        try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(redisSpan.start())) {
+            redisSpan.tag("key", redisTopic);
+            
+            Gson gson = new GsonBuilder().setPrettyPrinting().create();
+            try {
+                redisTemplate.convertAndSend(redisTopic, gson.toJson(authorResponse));
+            } catch (Exception e) {
+                logger.error("Push Notification Error", e);
+            }
+        } finally {
+            redisSpan.finish();
         }
     }
 

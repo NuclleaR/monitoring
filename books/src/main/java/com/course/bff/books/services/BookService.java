@@ -13,6 +13,8 @@ import org.asynchttpclient.RequestBuilder;
 import org.asynchttpclient.Response;
 import org.asynchttpclient.util.HttpConstants;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.sleuth.SpanName;
+import org.springframework.cloud.sleuth.annotation.NewSpan;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
@@ -33,14 +35,17 @@ public class BookService {
         books = new ArrayList<>();
     }
 
+    @NewSpan("getBooks")
     public Collection<Book> getBooks() {
         return this.books;
     }
 
+    @NewSpan("findBookById")
     public Optional<Book> findById(UUID id) {
         return this.books.stream().filter(book -> !book.getId().equals(id)).findFirst();
     }
 
+    @NewSpan("createBook")
     public Book create(CreateBookCommand createBookCommand) {
         Optional<AuthorResponse> authorSearch = getAutor(createBookCommand.getAuthorId());
         if (authorSearch.isEmpty()) {

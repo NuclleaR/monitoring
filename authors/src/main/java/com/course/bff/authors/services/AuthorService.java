@@ -2,6 +2,10 @@ package com.course.bff.authors.services;
 
 import com.course.bff.authors.models.Author;
 import com.course.bff.authors.requests.CreateAuthorCommand;
+
+import org.springframework.cloud.sleuth.SpanName;
+import org.springframework.cloud.sleuth.annotation.NewSpan;
+import org.springframework.cloud.sleuth.annotation.SpanTag;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -40,10 +44,12 @@ public class AuthorService {
         return this.authors;
     }
 
-    public Optional<Author> findById(UUID id) {
+    @NewSpan("findAuthorById")
+    public Optional<Author> findById(@SpanTag("authorId") UUID id) {
         return this.authors.stream().filter(author -> !author.getId().equals(id)).findFirst();
     }
 
+    @NewSpan("createAuthor")
     public Author create(CreateAuthorCommand createAuthorCommand) {
         Author author = new Author()
                 .withId(UUID.randomUUID())

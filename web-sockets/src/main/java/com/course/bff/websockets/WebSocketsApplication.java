@@ -36,6 +36,11 @@ public class WebSocketsApplication {
         JedisClientConfiguration jedisClientConfiguration = JedisClientConfiguration.builder().usePooling().build();
         JedisConnectionFactory factory = new JedisConnectionFactory(config, jedisClientConfiguration);
         factory.afterPropertiesSet();
+
+        System.out.println(redisHost);
+        System.out.println(redisPort);
+        System.out.println(redisTopic);
+
         return factory;
     }
 
