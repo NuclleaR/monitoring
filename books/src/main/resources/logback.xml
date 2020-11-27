@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
+    <property name="LOGS" value="./logs" />
+
     <appender name="Console" class="ch.qos.logback.core.ConsoleAppender">
         <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
             <layout class="ch.qos.logback.contrib.json.classic.JsonLayout">
@@ -11,8 +13,20 @@
         </encoder>
     </appender>
 
+    <appender name="File" class="ch.qos.logback.core.FileAppender">
+        <file>${LOGS}/spring-boot-logger.log</file>
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <timeZone>UTC</timeZone>
+            <timestampPattern>yyyy-MM-dd'T'HH:mm:ss.SSSX</timestampPattern>
+            <providers>
+                <provider class="net.logstash.logback.composite.loggingevent.ArgumentsJsonProvider" />
+            </providers>
+        </encoder>
+    </appender>
+
     <!-- LOG everything at INFO level -->
     <root level="info">
         <appender-ref ref="Console"/>
+        <appender-ref ref="File" />
     </root>
 </configuration>
