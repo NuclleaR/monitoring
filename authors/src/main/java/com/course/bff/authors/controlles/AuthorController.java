@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.sleuth.annotation.NewSpan;
 import org.springframework.cloud.sleuth.annotation.SpanTag;
+import org.springframework.data.geo.Metric;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -26,11 +27,13 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
+import io.micrometer.core.instrument.Metrics;
+import io.micrometer.core.instrument.Tag;
 import brave.Span;
 import brave.Tracer;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -59,12 +62,14 @@ public class AuthorController {
     @GetMapping()
     public Collection<AuthorResponse> getAuthors() {
         logger.info("Get authors");
+        Metrics.counter("request_count", "controller", this.getClass().getSimpleName()).increment();
         List<AuthorResponse> authorResponses = new ArrayList<>();
-        this.authorService.getAuthors().forEach(author -> {
-            AuthorResponse authorResponse = createAuthorResponse(author);
-            authorResponses.add(authorResponse);
+        Metrics.timer("execution_duration").record(() -> {
+            this.authorService.getAuthors().forEach(author -> {
+                AuthorResponse authorResponse = createAuthorResponse(author);
+                authorResponses.add(authorResponse);
+            });
         });
-
         return authorResponses;
     }
 
@@ -73,6 +78,7 @@ public class AuthorController {
         logger.info(String.format("Find authors by %s", id));
         Optional<Author> authorSearch = this.authorService.findById(id);
         if (authorSearch.isEmpty()) {
+            Metrics.counter("error_count", "controller", this.getClass().getSimpleName()).increment();
             throw new RuntimeException("Author isn't found");
         }
 
@@ -92,7 +98,7 @@ public class AuthorController {
         Span redisSpan = this.tracer.nextSpan().name("pushNotification");
         try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(redisSpan.start())) {
             redisSpan.tag("key", redisTopic);
-            
+
             Gson gson = new GsonBuilder().setPrettyPrinting().create();
             try {
                 redisTemplate.convertAndSend(redisTopic, gson.toJson(authorResponse));

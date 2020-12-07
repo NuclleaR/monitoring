@@ -10,6 +10,8 @@ import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 
+import io.micrometer.core.instrument.Metrics;
+
 @SpringBootApplication
 public class Application {
 
@@ -23,6 +25,7 @@ public class Application {
     private String redisTopic;
 
     public static void main(String[] args) {
+        Metrics.globalRegistry.config().commonTags("service", "authors");
         SpringApplication.run(Application.class, args);
     }
 

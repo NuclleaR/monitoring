@@ -129,6 +129,59 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     networks:
       - mynet
+  
+  prometheus:
+    image: "prom/prometheus:v2.23.0"
+    container_name: prom
+    ports:
+      - 9090:9090
+    depends_on:
+      - authors
+      - books
+    volumes:
+      - ./configs/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./prometheus:/prometheus
+    links:
+      - cadvisor:cadvisor
+      - node-exporter:node-exporter
+    networks:
+      - mynet
+    
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: node-exporter
+    restart: unless-stopped
+    expose:
+      - 9100
+    networks:
+      - mynet
+
+  cadvisor:
+    image: google/cadvisor:latest
+    container_name: cadvisor
+    restart: unless-stopped
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:rw
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    expose:
+      - 8080
+    networks:
+      - mynet
+
+  grafana:
+    image: "grafana/grafana:7.3.4"
+    container_name: grafa
+    ports:
+      - 3000:3000
+    volumes:
+      - ./grafana:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    networks:
+      - mynet
 
 networks:
   mynet:

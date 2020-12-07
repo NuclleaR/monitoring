@@ -29,6 +29,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import brave.Span;
 import brave.Tracer;
+import io.micrometer.core.instrument.Metrics;
 
 import java.util.ArrayList;
 import java.util.Collection;
